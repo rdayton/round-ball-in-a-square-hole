@@ -22,6 +22,12 @@ public class ButtonScript : MonoBehaviour {
 	
 	public void start()
 	{
-		Application.LoadLevel ("1scene");
+		Application.LoadLevel ("LevelSelect");
+	}
+
+	public void returnToMainMenu()
+	{
+		//TODO: limit use somehow so that it can't be abused to get around losing lives
+		Application.LoadLevel(0);
 	}
 }

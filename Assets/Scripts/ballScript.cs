@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 public class ballScript : MonoBehaviour {
 
-	public float speed;
+
 	private int count;
-	public Text countText;
+	//public Text countText;
 	private Vector3 currAc;
 	private Vector3 zeroAc;
 
@@ -15,8 +15,13 @@ public class ballScript : MonoBehaviour {
 	private float smooth = 0.5f;
 	private float GetAxisH = 0;
 	private float GetAxisV = 0;
-	public float speedAc = 25;
+	//public float speedAc = 25;
 	private int failCount = 0;
+	private float speed;
+	private float deviceSpeed;// = GameControl.control.speed/100;
+	private readonly float MINCLAMP = -1.5f;
+	private readonly float MAXCLAMP = 1.5f;
+	private GameControl control;
 	
 	// Use this for initialization
 	void Start () {
@@ -24,6 +29,9 @@ public class ballScript : MonoBehaviour {
 		count = 0;
 		setCountText ();
 		resetAxes ();
+		speed = GameControl.control.speed;
+		deviceSpeed = speed/100;
+		control = GameControl.control;
 
 	}
 	
@@ -32,8 +40,8 @@ public class ballScript : MonoBehaviour {
 
 		if (transform.position.y < -10)
 		{
+			control.lives--;
 			Application.LoadLevel(Application.loadedLevel);
-			failCount++;
 		}
 
 	
@@ -43,18 +51,22 @@ public class ballScript : MonoBehaviour {
 
 		if (SystemInfo.deviceType == DeviceType.Desktop) 
 		{
-						float moveHorizontal = Input.GetAxis ("Horizontal");
-						float moveVertical = Input.GetAxis ("Vertical");
+			float moveHorizontal = Input.GetAxis ("Horizontal");
+			float moveVertical = Input.GetAxis ("Vertical");
 
-						Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
-						rigidbody.AddForce (movement * speed * Time.deltaTime);
+			Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
+			rigidbody.AddForce (movement * speed * Time.deltaTime);
+
+
+
 		} 
 		else 
 		{
+				
 			//get input by accelerometer
 			currAc = Vector3.Lerp(currAc, Input.acceleration-zeroAc, Time.deltaTime/smooth);
-			GetAxisV = Mathf.Clamp(currAc.y * sensV, -1, 1);
-			GetAxisH = Mathf.Clamp(currAc.x * sensH, -1, 1);
+			GetAxisV = Mathf.Clamp(currAc.y * sensV, MINCLAMP, MAXCLAMP);
+			GetAxisH = Mathf.Clamp(currAc.x * sensH, MINCLAMP, MAXCLAMP);
 			// now use GetAxisV and GetAxisH instead of Input.GetAxis vertical and horizontal
 			// If the horizontal and vertical directions are swapped, swap curAc.y and curAc.x
 			// in the above equations. If some axis is going in the wrong direction, invert the
@@ -62,8 +74,8 @@ public class ballScript : MonoBehaviour {
 			
 			Vector3 movement = new Vector3 (GetAxisH, 0.0f, GetAxisV);
 			
-			rigidbody.AddForce(movement * speedAc );
-			
+			rigidbody.AddForce(movement * deviceSpeed);
+
 		}
 	}
 	
@@ -76,16 +88,24 @@ public class ballScript : MonoBehaviour {
 		} 
 		else if (other.gameObject.tag == "NextLevel")
 		{
-
+			//TODO: move to level control class
 			Application.LoadLevel(Application.loadedLevel+1);
 
 
+		}
+		else if (other.gameObject.tag == "SpeedUp")
+		{
+			other.gameObject.SetActive (false);
+			speed = GameControl.control.speed *3;
+			Debug.Log("Current speed = "+ speed);
+			
+			
 		}
 
 	}
 
 	void setCountText(){
-		countText.text = "Count: " + count;
+		//countText.text = "Count: " + count;
 
 		}
 
